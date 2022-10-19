@@ -6,6 +6,7 @@ using System;
 using SnakeGame.GameLoop;
 using SnakeGame.GridSpace;
 using Grid = SnakeGame.GridSpace.Grid;
+using SnakeGame.PlayerInput;
 
 namespace SnakeGame.Snake
 {
@@ -34,6 +35,37 @@ namespace SnakeGame.Snake
         {
             // registering to events
             GameManager.Instance.OnTick += GameManager_OnTick;
+        }
+
+        void Update()
+        {
+            HandleMovementInput();
+        }
+
+        private void HandleMovementInput()
+        {
+            Vector2 movementInput = PlayerInput.Input.Instance.GetMovementDirection();
+            switch (movementInput)
+            {
+                case Vector2 v when v.Equals(Vector2.up) 
+                && currentDirection != Direction.South:
+                    currentDirection = Direction.North;
+                    break;
+                case Vector2 v when v.Equals(Vector2.down)
+                && currentDirection != Direction.North:
+                    currentDirection = Direction.South;
+                    break;
+                case Vector2 v when v.Equals(Vector2.left)
+                && currentDirection != Direction.East:
+                    currentDirection = Direction.West;
+                    break;
+                case Vector2 v when v.Equals(Vector2.right)
+                && currentDirection != Direction.West:
+                    currentDirection = Direction.East;
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void GameManager_OnTick(object sender, EventArgs e)

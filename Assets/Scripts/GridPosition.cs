@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Snake.Grid 
+namespace SnakeGame.GridSpace 
 {
-    public class GridPosition : MonoBehaviour
+    public class GridPosition
     {
         int x;
         int y;

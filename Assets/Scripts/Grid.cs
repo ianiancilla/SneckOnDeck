@@ -2,15 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Snake.Grid 
+namespace SnakeGame.GridSpace
 {
-    public class Grid : MonoBehaviour
-    {
-        const int SIZE_X = 1280;
-        const int SIZE_Y = 800;
-        public enum Direction { North, East, South, West };
+    public enum Direction { North, East, South, West };
 
-        private bool IsValidGridPos(GridPosition gridPosition)
+    public static class Grid
+    {
+
+        const int SIZE_X = 64;
+        const int SIZE_Y = 40;
+
+        public static bool IsValidGridPos(GridPosition gridPosition)
         {
             if (Mathf.Abs(gridPosition.GetX()) > ((SIZE_X / 2) - 1)){ return false; }
             if (Mathf.Abs(gridPosition.GetY()) > ((SIZE_Y / 2) - 1)){ return false; }
@@ -18,7 +20,7 @@ namespace Snake.Grid
             return true;
         }
 
-        private GridPosition GetNeighbour(GridPosition gridPosition, Direction direction)
+        public static GridPosition GetNeighbour(GridPosition gridPosition, Direction direction)
         {
             switch (direction)
             {
@@ -37,6 +39,18 @@ namespace Snake.Grid
                 default:
                     return new GridPosition(0,0);
             }
+        }
+
+        public static GridPosition WorldPosToGridPos(Vector3 worldPos)
+        {
+            return new GridPosition((int)(worldPos.x), (int)(worldPos.y));
+        }
+
+        public static Vector3 GridPosToWorldPos (GridPosition gridPosition)
+        {
+            return new Vector3(gridPosition.GetX(),
+                               gridPosition.GetY(),
+                               0);
         }
 
     }

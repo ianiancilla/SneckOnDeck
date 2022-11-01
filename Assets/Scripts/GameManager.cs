@@ -3,20 +3,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+using SnakeGame.GridSpace;
+using Grid = SnakeGame.GridSpace.Grid;
+
 namespace SnakeGame.GameLoop
 {
+    public class GridPosEventArgs : EventArgs
+    {
+        public GridPosition Data { get; set; }
+        public GridPosEventArgs(GridPosition data)
+        {
+            Data = data;
+        }
+    }
+
     public class GameManager : MonoBehaviour
     {
-        [SerializeField] float tickDuration = 1f;
+        [SerializeField] float tickStartingDuration = 1f;
+        [SerializeField] float tickDecreasePercentageOnEat = 20f;
+        [SerializeField] float tickMinDuration = 0.1f;
+
+
 
         public static GameManager Instance { get; private set; }
 
         // events
         public event EventHandler OnTick;
+        public event EventHandler<GridPosEventArgs> OnEat;
 
         // variables
+        float tickDuration;
         float tickTimer;
-
 
         private void Awake()
         {
@@ -31,6 +48,7 @@ namespace SnakeGame.GameLoop
 
         void Start()
         {
+            tickDuration = tickStartingDuration;
             tickTimer = tickDuration;
         }
 
@@ -42,6 +60,17 @@ namespace SnakeGame.GameLoop
                 OnTick? .Invoke(this, EventArgs.Empty);
                 tickTimer = tickDuration;
             }
+        }
+
+        public void Eat(GridPosition gridPos)
+        {
+            if (tickDecreasePercentageOnEat != 0)
+            {
+                float tentativeTick = tickDuration - 
+                                      (tickMinDuration/tickDecreasePercentageOnEat);
+                tickDuration = Mathf.Max(tentativeTick, tickMinDuration);
+            }
+            OnEat ? .Invoke(this, new GridPosEventArgs(gridPos));
         }
     }
 }

@@ -5,11 +5,14 @@ using System;
 using System.Linq;
 
 using SnakeGame.GameLoop;
+
 using SnakeGame.GridSpace;
 using Grid = SnakeGame.GridSpace.Grid;
-using SnakeGame.PlayerInput;
 
-namespace SnakeGame.Snake
+using SnakeGame.PlayerInput;
+using Input = SnakeGame.PlayerInput.Input;
+
+namespace SnakeGame.Actors
 {
     public class Snake : MonoBehaviour
     {
@@ -28,6 +31,9 @@ namespace SnakeGame.Snake
 
         List<Transform> snakeTileTransforms = new List<Transform>();
 
+        // cache
+        AppleSpawner appleSpawner;
+
         void Awake()
         {
             currentDirection = startingDirection;
@@ -42,6 +48,10 @@ namespace SnakeGame.Snake
         {
             // registering to events
             GameManager.Instance.OnTick += GameManager_OnTick;
+            GameManager.Instance.OnEat += GameManager_OnEat;
+
+            // cache
+            appleSpawner = FindObjectOfType<AppleSpawner>();
         }
 
         void Update()
@@ -51,7 +61,7 @@ namespace SnakeGame.Snake
 
         private void HandleMovementInput()
         {
-            Vector2 movementInput = PlayerInput.Input.Instance.GetMovementDirection();
+            Vector2 movementInput = Input.Instance.GetMovementDirection();
             switch (movementInput)
             {
                 case Vector2 v when v.Equals(Vector2.up) 
@@ -79,6 +89,7 @@ namespace SnakeGame.Snake
         {
             ApplyLatestInput();
             Move();
+            FeedCheck();
         }
 
         private void ApplyLatestInput()
@@ -137,9 +148,31 @@ namespace SnakeGame.Snake
             head.position = Grid.GridPosToWorldPos(newHeadPos);
         }
 
+        private void FeedCheck()
+        {
+            foreach (Transform tile in snakeTileTransforms)
+            {
+                GridPosition tilePos = Grid.WorldPosToGridPos(tile.position);
+                if (appleSpawner.IsApplePos(tilePos))
+                {
+                    GameManager.Instance.Eat(tilePos);
+                }
+            }
+        }
+
+        private void GameManager_OnEat(object sender, GridPosEventArgs args)
+        {
+            currentLength++;
+        }
+
         private static void Die()
         {
             Debug.Log("DEATH");
+        }
+
+        public bool IsGridPosOnSnake(GridPosition gridPos)
+        {
+            return Grid.IsPosOnList(gridPos, snakeTileTransforms);
         }
     }
 

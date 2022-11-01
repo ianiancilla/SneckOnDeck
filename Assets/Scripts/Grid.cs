@@ -20,6 +20,14 @@ namespace SnakeGame.GridSpace
             return true;
         }
 
+        public static GridPosition GetRandomGridPosition()
+        {
+            int x = Random.Range(-(SIZE_X/2-1), (SIZE_X/2));
+            int y = Random.Range(-(SIZE_Y/2-1), (SIZE_Y/2));
+
+            return new GridPosition(x,y);
+        }
+
         public static GridPosition GetNeighbour(GridPosition gridPosition, Direction direction)
         {
             switch (direction)
@@ -51,6 +59,19 @@ namespace SnakeGame.GridSpace
             return new Vector3(gridPosition.GetX(),
                                gridPosition.GetY(),
                                0);
+        }
+
+        public static bool IsPosOnList(GridPosition gridPos, List<Transform> list)
+        {
+            foreach (Transform tile in list)
+            {
+                GridPosition tilePos = Grid.WorldPosToGridPos(tile.position);
+                if (gridPos == tilePos)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }

@@ -9,8 +9,8 @@ namespace SnakeGame.GridSpace
     public static class Grid
     {
 
-        const int SIZE_X = 64;
-        const int SIZE_Y = 40;
+        const int SIZE_X = 30;
+        const int SIZE_Y = 18;
 
         public static bool IsValidGridPos(GridPosition gridPosition)
         {

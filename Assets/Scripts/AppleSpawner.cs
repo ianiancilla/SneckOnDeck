@@ -16,7 +16,7 @@ namespace SnakeGame.Actors
         [SerializeField] int numConcurrentApples = 2;
         
         // variables
-        private List <Transform> apples = new List<Transform>();
+        private List <TilePiece> apples = new List<TilePiece>();
 
         // cache
         private Snake snake;
@@ -36,7 +36,8 @@ namespace SnakeGame.Actors
         {
             if (apples.Count < numConcurrentApples)
             {
-                Transform newApple = SpawnAppleInValidPos();
+                TilePiece newApple = SpawnAppleAtValidPos();
+                
                 if (newApple != null)
                 { 
                     apples.Add(newApple);
@@ -50,18 +51,21 @@ namespace SnakeGame.Actors
         }
 
 
-        private Transform SpawnApple(GridPosition gridPosition)
+        private TilePiece SpawnApple(GridPosition gridPosition)
         {
-            return Instantiate(applePrefab,
-                               Grid.GridPosToWorldPos(gridPosition),
-                               Quaternion.identity,
-                               this.transform).transform;
+            Vector3 spawnPos = Grid.GridPosToWorldPos(gridPosition);
+            GameObject appleGO = Instantiate(applePrefab,
+                                             spawnPos,
+                                             Quaternion.identity,
+                                             this.transform);
+
+            return new TilePiece(appleGO.transform);
         }
 
-        private Transform SpawnAppleInValidPos()
+        private TilePiece SpawnAppleAtValidPos()
         {
             GridPosition spawnPos = Grid.GetRandomGridPosition();
-            int remainingAttempts = 200;
+            int remainingAttempts = 200;    // number of attempts to find a random free spot
             while (snake.IsGridPosOnSnake(spawnPos) && remainingAttempts > 0)
             {
                 remainingAttempts--;
@@ -75,25 +79,37 @@ namespace SnakeGame.Actors
             else return null;
         }
 
-        public bool IsApplePos(GridPosition gridPos)
+        public bool IsCollidingWithApple(GridPosition gridPos)
         {
-            return Grid.IsPosOnList(gridPos, apples);
-        }
+            foreach (TilePiece apple in apples)
+            {
+                if (apple.IsColliding(gridPos)) return true;
+            }
 
+            return false;
+        }
+        public bool IsCollidingWithApple(TilePiece tile)
+        {
+            foreach (TilePiece apple in apples)
+            {
+                if (apple.IsColliding(tile)) return true;
+            }
+
+            return false;
+        }
+        
         private void DestroyAppleAtPos(GridPosition gridPos)
         {
-            foreach (Transform apple in apples)
+            foreach (TilePiece apple in apples)
             {
-                if (Grid.WorldPosToGridPos(apple.position) == gridPos)
+                if (apple.IsColliding(gridPos))
                 {
-                    Destroy(apple.gameObject);
+                    Destroy(apple.GetTransform().gameObject);
                     apples.Remove(apple);
                     return;
                 }
             }
         }
-
     }
-
 }
 

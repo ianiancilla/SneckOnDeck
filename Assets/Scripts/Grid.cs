@@ -61,19 +61,6 @@ namespace SnakeGame.GridSpace
                                0);
         }
 
-        public static bool IsPosOnList(GridPosition gridPos, List<Transform> list)
-        {
-            foreach (Transform tile in list)
-            {
-                GridPosition tilePos = Grid.WorldPosToGridPos(tile.position);
-                if (gridPos == tilePos)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 }
 

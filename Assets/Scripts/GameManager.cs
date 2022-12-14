@@ -32,7 +32,7 @@ namespace SnakeGame.GameLoop
         public event EventHandler<GridPosEventArgs> OnEat;
 
         // variables
-        float tickDuration;
+        public float tickDuration;
         float tickTimer;
 
         private void Awake()
@@ -66,8 +66,7 @@ namespace SnakeGame.GameLoop
         {
             if (tickDecreasePercentageOnEat != 0)
             {
-                float tentativeTick = tickDuration - 
-                                      (tickMinDuration/tickDecreasePercentageOnEat);
+                float tentativeTick = tickDuration - (tickDuration * (tickDecreasePercentageOnEat / 100));
                 tickDuration = Mathf.Max(tentativeTick, tickMinDuration);
             }
             OnEat ? .Invoke(this, new GridPosEventArgs(gridPos));

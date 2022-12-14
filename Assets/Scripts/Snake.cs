@@ -21,7 +21,7 @@ namespace SnakeGame.Actors
         [SerializeField] int startingLength = 1;
 
         // variables
-        Transform head;
+        TilePiece head;
 
         Direction currentDirection;  //the direction the snake is actually going
         Direction latestDirectionInput;  //mutliple inputs can be recorded between ticks
@@ -29,7 +29,7 @@ namespace SnakeGame.Actors
         int currentLength;
         bool grewLengthThisTick = false;
 
-        List<Transform> snakeTileTransforms = new List<Transform>();
+        List<TilePiece> snakeTiles = new List<TilePiece>();
 
         // cache
         AppleSpawner appleSpawner;
@@ -40,8 +40,9 @@ namespace SnakeGame.Actors
             currentLength = startingLength;
 
             // set head
-            head = Instantiate(snakeTilePrefab, Vector3.zero, Quaternion.identity).transform;
-            snakeTileTransforms.Add(head);
+            GameObject headGO = Instantiate(snakeTilePrefab, Vector3.zero, Quaternion.identity, this.transform);
+            head = new TilePiece(headGO.transform);
+            snakeTiles.Add(head);
         }
 
         private void Start()
@@ -100,8 +101,7 @@ namespace SnakeGame.Actors
         private void Move()
         {
             // find new head position
-            GridPosition headPos = Grid.WorldPosToGridPos(head.transform.position);
-            GridPosition newHeadPos = Grid.GetNeighbour(headPos, currentDirection);
+            GridPosition newHeadPos = Grid.GetNeighbour(head.GetGridPosition(), currentDirection);
 
             // if collided with screen border
             if (!Grid.IsValidGridPos(newHeadPos))
@@ -111,18 +111,22 @@ namespace SnakeGame.Actors
             }
 
             // add a tile on top of last one if one should be added
-            if (snakeTileTransforms.Count < currentLength)
+            if (snakeTiles.Count < currentLength)
             {
-                Transform newTile = Instantiate(snakeTilePrefab, 
-                                                snakeTileTransforms.Last().position, 
-                                                Quaternion.identity).transform;
+                Transform newTileTransform = Instantiate(snakeTilePrefab, 
+                                                         Vector3.zero, 
+                                                         Quaternion.identity,
+                                                         this.transform).transform;
 
-                snakeTileTransforms.Add(newTile);
+                TilePiece newTile = new TilePiece(newTileTransform);
+                newTile.MoveTileToGridPos(snakeTiles.Last().GetGridPosition());
+
+                snakeTiles.Add(newTile);
                 grewLengthThisTick = true;
             }
 
             // update tail positions
-            int lastTileToUpdate = snakeTileTransforms.Count - 1;
+            int lastTileToUpdate = snakeTiles.Count - 1;
             if (grewLengthThisTick) // the last one does not move if just created
             {
                 lastTileToUpdate --;
@@ -132,30 +136,29 @@ namespace SnakeGame.Actors
             // from the last one, each follows the position of the one previous, before that is updated
             for (int i = lastTileToUpdate; i > 0; i--)
             {
-                snakeTileTransforms[i].position = snakeTileTransforms[i-1].position;
+                snakeTiles[i].MoveTileToGridPos(snakeTiles[i-1].GetGridPosition());
             }
 
             // check for self-collision
-            foreach(Transform tile in snakeTileTransforms)
+            foreach(TilePiece tile in snakeTiles)
             {
-                if (Grid.GridPosToWorldPos(newHeadPos) == tile.position)
+                if (tile.IsColliding(newHeadPos))
                 {
                     Die();
                 }
             }
 
             // update head position
-            head.position = Grid.GridPosToWorldPos(newHeadPos);
+            head.MoveTileToGridPos(newHeadPos);
         }
 
         private void FeedCheck()
         {
-            foreach (Transform tile in snakeTileTransforms)
+            foreach (TilePiece tile in snakeTiles)
             {
-                GridPosition tilePos = Grid.WorldPosToGridPos(tile.position);
-                if (appleSpawner.IsApplePos(tilePos))
+                if (appleSpawner.IsCollidingWithApple(tile))
                 {
-                    GameManager.Instance.Eat(tilePos);
+                    GameManager.Instance.Eat(tile.GetGridPosition());
                 }
             }
         }
@@ -172,7 +175,12 @@ namespace SnakeGame.Actors
 
         public bool IsGridPosOnSnake(GridPosition gridPos)
         {
-            return Grid.IsPosOnList(gridPos, snakeTileTransforms);
+            foreach (TilePiece tile in snakeTiles)
+            {
+                if (tile.IsColliding(gridPos)) return true;
+            }
+
+            return false;
         }
     }
 

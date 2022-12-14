@@ -30,9 +30,10 @@ namespace SnakeGame.GameLoop
         // events
         public event EventHandler OnTick;
         public event EventHandler<GridPosEventArgs> OnEat;
+        public event EventHandler OnGameOver;
 
         // variables
-        public float tickDuration;
+        float tickDuration;
         float tickTimer;
 
         private void Awake()
@@ -70,6 +71,12 @@ namespace SnakeGame.GameLoop
                 tickDuration = Mathf.Max(tentativeTick, tickMinDuration);
             }
             OnEat ? .Invoke(this, new GridPosEventArgs(gridPos));
+        }
+
+        public void GameOver()
+        {
+            OnGameOver ? .Invoke(this, EventArgs.Empty);
+            Debug.Log("GAME OVER");
         }
     }
 }

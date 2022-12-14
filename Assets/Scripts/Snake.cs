@@ -32,7 +32,7 @@ namespace SnakeGame.Actors
         List<TilePiece> snakeTiles = new List<TilePiece>();
 
         // cache
-        AppleSpawner appleSpawner;
+        ItemSpawner[] itemSpawners;
 
         void Awake()
         {
@@ -52,7 +52,7 @@ namespace SnakeGame.Actors
             GameManager.Instance.OnEat += GameManager_OnEat;
 
             // cache
-            appleSpawner = FindObjectOfType<AppleSpawner>();
+            itemSpawners = FindObjectsOfType<ItemSpawner>();
         }
 
         void Update()
@@ -90,7 +90,7 @@ namespace SnakeGame.Actors
         {
             ApplyLatestInput();
             Move();
-            FeedCheck();
+            ItemCollisionCheck();
         }
 
         private void ApplyLatestInput()
@@ -106,7 +106,7 @@ namespace SnakeGame.Actors
             // if collided with screen border
             if (!Grid.IsValidGridPos(newHeadPos))
             {
-                Die();
+                GameManager.Instance.GameOver();
                 return;
             }
 
@@ -144,7 +144,7 @@ namespace SnakeGame.Actors
             {
                 if (tile.IsColliding(newHeadPos))
                 {
-                    Die();
+                    GameManager.Instance.GameOver();
                 }
             }
 
@@ -152,13 +152,16 @@ namespace SnakeGame.Actors
             head.MoveTileToGridPos(newHeadPos);
         }
 
-        private void FeedCheck()
+        private void ItemCollisionCheck()
         {
-            foreach (TilePiece tile in snakeTiles)
+            foreach (ItemSpawner spawner in itemSpawners)
             {
-                if (appleSpawner.IsCollidingWithApple(tile))
+                foreach (TilePiece tile in snakeTiles)
                 {
-                    GameManager.Instance.Eat(tile.GetGridPosition());
+                    if (spawner.IsCollidingWithItem(tile))
+                    {
+                        GameManager.Instance.Eat(tile.GetGridPosition());
+                    }
                 }
             }
         }

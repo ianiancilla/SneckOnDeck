@@ -1,4 +1,4 @@
-/* using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -10,54 +10,54 @@ using Grid = SnakeGame.GridSpace.Grid;
 
 namespace SnakeGame.Actors
 {
-    public interface IItemSpawner
+    public abstract class ItemSpawner : MonoBehaviour
     {
-        GameObject prefab { get; set;}
-        int numConcurrentItems { get; set;}
+        [SerializeField] GameObject itemPrefab;
+        [SerializeField] int numConcurrentItems = 2;
+        
+        // variables
+        protected List <TilePiece> items = new List<TilePiece>();
 
-        private void Start()
+        // cache
+        protected Snake snake;
+
+        protected void Start()
         {
-
-
             // cache
             snake = FindObjectOfType<Snake>();
 
             // registering to events
             GameManager.Instance.OnTick += GameManager_OnTick;
-            GameManager.Instance.OnEat += GameManager_OnEat;
-
         }
 
-        private void GameManager_OnTick(object sender, EventArgs e)
+        protected void GameManager_OnTick(object sender, EventArgs e)
         {
-            if (itemsTransforms.Count < numConcurrentApples)
+            if (items.Count < numConcurrentItems)
             {
-                Transform newApple = SpawnAppleInValidPos();
-                if (newApple != null)
+                TilePiece newItemTilePiece = SpawnItemAtValidPos();
+                
+                if (newItemTilePiece != null)
                 { 
-                    itemsTransforms.Add(newApple);
+                    items.Add(newItemTilePiece);
                 }
             }
         }
 
-        private void GameManager_OnEat(object sender, GridPosEventArgs args)
+        protected TilePiece SpawnItem(GridPosition gridPosition)
         {
-            DestroyAppleAtPos(args.Data);
+            Vector3 spawnPos = Grid.GridPosToWorldPos(gridPosition);
+            GameObject itemGO = Instantiate(itemPrefab,
+                                             spawnPos,
+                                             Quaternion.identity,
+                                             this.transform);
+
+            return new TilePiece(itemGO.transform);
         }
 
-
-        private Transform SpawnApple(GridPosition gridPosition)
-        {
-            return Instantiate(applePrefab,
-                               Grid.GridPosToWorldPos(gridPosition),
-                               Quaternion.identity,
-                               this.transform).transform;
-        }
-
-        private Transform SpawnAppleInValidPos()
+        protected TilePiece SpawnItemAtValidPos()
         {
             GridPosition spawnPos = Grid.GetRandomGridPosition();
-            int remainingAttempts = 200;
+            int remainingAttempts = 200;    // number of attempts to find a random free spot
             while (snake.IsGridPosOnSnake(spawnPos) && remainingAttempts > 0)
             {
                 remainingAttempts--;
@@ -66,31 +66,44 @@ namespace SnakeGame.Actors
 
             if (!snake.IsGridPosOnSnake(spawnPos))
             {
-                return SpawnApple(spawnPos);
+                return SpawnItem(spawnPos);
             }
             else return null;
         }
 
-        public bool IsApplePos(GridPosition gridPos)
+        public bool IsCollidingWithItem(GridPosition gridPos)
         {
-            return Grid.IsPosOnList(gridPos, itemsTransforms);
-        }
-
-        private void DestroyAppleAtPos(GridPosition gridPos)
-        {
-            foreach (Transform apple in itemsTransforms)
+            foreach (TilePiece item in items)
             {
-                if (Grid.WorldPosToGridPos(apple.position) == gridPos)
+                if (item.IsColliding(gridPos)) return true;
+            }
+
+            return false;
+        }
+        public bool IsCollidingWithItem(TilePiece tile)
+        {
+            foreach (TilePiece item in items)
+            {
+                if (item.IsColliding(tile)) return true;
+            }
+
+            return false;
+        }
+        
+        protected void DestroyItemAtPos(GridPosition gridPos)
+        {
+            foreach (TilePiece item in items)
+            {
+                if (item.IsColliding(gridPos))
                 {
-                    Destroy(apple.gameObject);
-                    itemsTransforms.Remove(apple);
+                    Destroy(item.GetTransform().gameObject);
+                    items.Remove(item);
                     return;
                 }
             }
         }
 
+        public abstract void HandleItemCollidingWithSnake (TilePiece tile);
     }
-
 }
 
- */
